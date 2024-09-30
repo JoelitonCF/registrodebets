@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro de Apostas</title>
+  <link rel="stylesheet" href="style.css"> <!-- Importa o arquivo CSS -->
+</head>
+<body>
+
+<div class="container">
+  <h1>Registro de Apostas</h1>
+
+  <div class="stacke-container">
+    <div>
+      <h2>Saldo Atual</h2>
+      <div id="stacke">R$ 0,00</div>
+    </div>
+    <div>
+      <button id="depositButton">Depósito</button>
+      <button id="withdrawButton">Saque</button>
+      <button id="editStackeButton">Editar Stacke</button>
+    </div>
+  </div>
+
+  <form id="betForm">
+    <input type="hidden" id="editingBetId">
+    <label for="tipster">Nome do Tipster:</label>
+    <select id="tipster" required>
+        <option value="camilojoga10">CAMILO JOGA10</option>
+        <option value="reidoscantos">REI DOS CANTOS</option>
+        <option value="helderdabet">HELDER DA BET</option>
+        <option value="luisamendes">LUISA MENDES</option>
+        <option value="professor">PROFESSOR</option>
+        <option value="nalanda">NALANDA</option>
+        <option value="ortega">ORTEGA</option>
+        <option value="berzord">BETZORD</option>
+    </select>
+
+    <label for="odd">Odd:</label>
+    <input type="number" id="odd" step="0.01" required>
+
+    <label for="valor">Valor da Aposta:</label>
+    <input type="number" id="valor" step="0.01" required>
+
+    <label for="resultado">Resultado:</label>
+    <select id="resultado" required>
+      <option value="green">Green</option>
+      <option value="red">Red</option>
+      <option value="aberto">Aberto</option>
+    </select>
+
+    <input type="submit" value="Registrar Aposta">
+  </form>
+
+  <div id="confirmation"></div>
+  <div id="errorMessage"></div>
+
+  <h2>Apostas Registradas</h2>
+  <table id="betsTable">
+    <thead>
+      <tr>
+        <th>Tipster</th>
+        <th>Odd</th>
+        <th>Valor</th>
+        <th>Resultado</th>
+        <th>Data</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <h2>Totais</h2>
+  <div id="totalGreen" class="total"></div>
+  <div id="totalRed" class="total"></div>
+
+  <h2>Relatório Diário</h2>
+  <canvas id="betChart" width="400" height="200"></canvas>
+
+  <h2>Relatório por Tipster</h2>
+  <canvas id="tipsterChart" width="400" height="200"></canvas>
+</div>
+
+<!-- Modal para edição de saldo, depósito e saque -->
+<div class="modal" id="stackeModal">
+  <h3 id="modalTitle">Editar Stacke</h3>
+  <input type="number" id="modalAmount" placeholder="Digite o valor">
+  <button id="modalConfirmButton">Confirmar</button>
+  <button id="modalCancelButton">Cancelar</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="script.js"></script> <!-- Importa o arquivo JS -->
+
+</body>
+</html>
