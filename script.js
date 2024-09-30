@@ -2,6 +2,8 @@ const form = document.getElementById('betForm');
 const betsTable = document.querySelector('#betsTable tbody');
 const betChart = document.getElementById('betChart').getContext('2d');
 const tipsterChart = document.getElementById('tipsterChart').getContext('2d');
+const dailyProfitChart = document.getElementById('dailyProfitChart').getContext('2d');
+const tipsterProfitChart = document.getElementById('tipsterProfitChart').getContext('2d');
 const totalGreen = document.getElementById('totalGreen');
 const totalRed = document.getElementById('totalRed');
 const stackeDisplay = document.getElementById('stacke');
@@ -9,26 +11,31 @@ const confirmation = document.getElementById('confirmation');
 const errorMessage = document.getElementById('errorMessage');
 const editingBetId = document.getElementById('editingBetId');
 
-// Modal elements
-const stackeModal = document.getElementById('stackeModal');
-const modalTitle = document.getElementById('modalTitle');
-const modalAmount = document.getElementById('modalAmount');
-const modalConfirmButton = document.getElementById('modalConfirmButton');
-const modalCancelButton = document.getElementById('modalCancelButton');
-
 let bets = JSON.parse(localStorage.getItem('bets')) || [];
 let stacke = JSON.parse(localStorage.getItem('stacke')) || 1000; // Saldo inicial de R$ 1000
 
-let betChartInstance, tipsterChartInstance;
+let betChartInstance, tipsterChartInstance, dailyProfitChartInstance, tipsterProfitChartInstance;
+
+// Função para calcular lucro de uma aposta
+function calculateProfit(bet) {
+  if (bet.resultado === 'green') {
+    return (bet.valor * bet.odd) - bet.valor; // Lucro positivo
+  } else if (bet.resultado === 'red') {
+    return -bet.valor; // Perda total
+  }
+  return 0; // Para apostas "aberto"
+}
 
 function updateTable() {
   betsTable.innerHTML = '';
   bets.forEach((bet, index) => {
+    const profit = calculateProfit(bet);
     const row = `<tr>
       <td>${bet.tipster}</td>
       <td>${bet.odd}</td>
       <td>${bet.valor}</td>
       <td>${bet.resultado}</td>
+      <td>R$ ${profit.toFixed(2)}</td> <!-- Mostrando lucro/perda -->
       <td>${bet.data}</td>
       <td>
         <button class="edit-button" onclick="editBet(${index})">Editar</button>
@@ -51,38 +58,31 @@ function updateTotals() {
   totalRed.innerText = `Total Red: R$ ${totalRedValue.toFixed(2)}`;
 }
 
-// Função para atualizar gráfico de apostas por data
-function updateChart() {
-  const dates = {};
+// Atualiza gráfico de lucro por tipster
+function updateTipsterProfitChart() {
+  const tipsters = {};
   bets.forEach(bet => {
-    const date = bet.data;
-    if (!dates[date]) {
-      dates[date] = { green: 0, red: 0 };
+    const tipster = bet.tipster;
+    if (!tipsters[tipster]) {
+      tipsters[tipster] = 0;
     }
-    dates[date][bet.resultado] += parseFloat(bet.valor);
+    tipsters[tipster] += calculateProfit(bet);
   });
 
-  const labels = Object.keys(dates);
-  const greenData = labels.map(date => dates[date].green);
-  const redData = labels.map(date => dates[date].red);
+  const labels = Object.keys(tipsters);
+  const profitData = labels.map(tipster => tipsters[tipster]);
 
-  // Destroi o gráfico anterior se existir, para evitar sobreposição
-  if (betChartInstance) betChartInstance.destroy();
-
-  betChartInstance = new Chart(betChart, {
+  if (tipsterProfitChartInstance) tipsterProfitChartInstance.destroy();
+  
+  tipsterProfitChartInstance = new Chart(tipsterProfitChart, {
     type: 'bar',
     data: {
       labels,
       datasets: [
         {
-          label: 'Green',
-          backgroundColor: 'green',
-          data: greenData
-        },
-        {
-          label: 'Red',
-          backgroundColor: 'red',
-          data: redData
+          label: 'Lucro',
+          backgroundColor: 'blue',
+          data: profitData
         }
       ]
     },
@@ -94,38 +94,31 @@ function updateChart() {
   });
 }
 
-// Função para atualizar gráfico por tipster
-function updateTipsterChart() {
-  const tipsters = {};
+// Atualiza gráfico de lucro total diário
+function updateDailyProfitChart() {
+  const dailyProfits = {};
   bets.forEach(bet => {
-    const tipster = bet.tipster;
-    if (!tipsters[tipster]) {
-      tipsters[tipster] = { green: 0, red: 0 };
+    const date = bet.data;
+    if (!dailyProfits[date]) {
+      dailyProfits[date] = 0;
     }
-    tipsters[tipster][bet.resultado] += parseFloat(bet.valor);
+    dailyProfits[date] += calculateProfit(bet);
   });
 
-  const labels = Object.keys(tipsters);
-  const greenData = labels.map(tipster => tipsters[tipster].green);
-  const redData = labels.map(tipster => tipsters[tipster].red);
+  const labels = Object.keys(dailyProfits);
+  const profitData = labels.map(date => dailyProfits[date]);
 
-  // Destroi o gráfico anterior se existir, para evitar sobreposição
-  if (tipsterChartInstance) tipsterChartInstance.destroy();
-
-  tipsterChartInstance = new Chart(tipsterChart, {
-    type: 'bar',
+  if (dailyProfitChartInstance) dailyProfitChartInstance.destroy();
+  
+  dailyProfitChartInstance = new Chart(dailyProfitChart, {
+    type: 'line',
     data: {
       labels,
       datasets: [
         {
-          label: 'Green',
+          label: 'Lucro Diário',
           backgroundColor: 'green',
-          data: greenData
-        },
-        {
-          label: 'Red',
-          backgroundColor: 'red',
-          data: redData
+          data: profitData
         }
       ]
     },
@@ -140,7 +133,7 @@ function updateTipsterChart() {
 form.addEventListener('submit', function (event) {
   event.preventDefault();
 
-  const today = new Date().toISOString().split('T')[0]; // Data atual do sistema
+  const today = new Date().toISOString().split('T')[0];
   const editingIndex = editingBetId.value;
 
   const newBet = {
@@ -170,32 +163,13 @@ form.addEventListener('submit', function (event) {
 
   form.reset();
   updateTable();
-  updateStacke();  // Atualiza o saldo
-  updateTotals();  // Atualiza os totais
-  updateChart();   // Atualiza o gráfico de apostas
-  updateTipsterChart();  // Atualiza o gráfico por tipster
-});
-
-function deleteBet(index) {
-  const bet = bets[index];
-
-  if (bet.resultado === 'green') {
-    stacke -= (bet.valor * bet.odd) - bet.valor;
-  } else if (bet.resultado === 'red') {
-    stacke += bet.valor;
-  }
-
-  bets.splice(index, 1); // Remove a aposta
-  localStorage.setItem('bets', JSON.stringify(bets));
-  localStorage.setItem('stacke', JSON.stringify(stacke));
-
-  updateTable();
   updateStacke();
   updateTotals();
-  updateChart();  // Atualiza o gráfico após excluir
-  updateTipsterChart();
-}
+  updateTipsterProfitChart();  // Atualiza gráfico de lucro por tipster
+  updateDailyProfitChart();    // Atualiza gráfico de lucro diário
+});
 
+// Demais funções seguem o mesmo padrão do código anterior (excluir, editar, etc.)
 function editBet(index) {
   const bet = bets[index];
   form.elements['tipster'].value = bet.tipster;

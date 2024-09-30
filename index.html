@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Registro de Apostas</title>
-  <link rel="stylesheet" href="style.css"> <!-- Importa o arquivo CSS -->
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -34,7 +34,6 @@
         <option value="professor">PROFESSOR</option>
         <option value="nalanda">NALANDA</option>
         <option value="ortega">ORTEGA</option>
-        <option value="berzord">BETZORD</option>
     </select>
 
     <label for="odd">Odd:</label>
@@ -64,6 +63,7 @@
         <th>Odd</th>
         <th>Valor</th>
         <th>Resultado</th>
+        <th>Lucro</th> <!-- Nova coluna de lucro -->
         <th>Data</th>
         <th>Ações</th>
       </tr>
@@ -75,14 +75,20 @@
   <div id="totalGreen" class="total"></div>
   <div id="totalRed" class="total"></div>
 
-  <h2>Relatório Diário</h2>
+  <!-- Novos Gráficos -->
+  <h2>Relatório de Lucro Total Diário</h2>
+  <canvas id="dailyProfitChart" width="400" height="200"></canvas>
+
+  <h2>Relatório de Lucro por Tipster</h2>
+  <canvas id="tipsterProfitChart" width="400" height="200"></canvas>
+
+  <h2>Relatório Diário de Apostas</h2>
   <canvas id="betChart" width="400" height="200"></canvas>
 
-  <h2>Relatório por Tipster</h2>
+  <h2>Relatório de Apostas por Tipster</h2>
   <canvas id="tipsterChart" width="400" height="200"></canvas>
 </div>
 
-<!-- Modal para edição de saldo, depósito e saque -->
 <div class="modal" id="stackeModal">
   <h3 id="modalTitle">Editar Stacke</h3>
   <input type="number" id="modalAmount" placeholder="Digite o valor">
@@ -91,7 +97,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="script.js"></script> <!-- Importa o arquivo JS -->
+<script src="script.js"></script>
 
 </body>
 </html>
